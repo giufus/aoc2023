@@ -10,7 +10,7 @@ pub fn one(input: String) -> u32 {
             let mut ss: String = numbers.first().unwrap().to_string();
             ss.push_str(numbers.last().unwrap().to_string().as_str());
             let cat = ss.parse::<u32>().unwrap();
-            dbg!(cat)
+            //dbg!(cat)
         }
         ).sum();
     dbg!(sum)
