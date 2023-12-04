@@ -21,11 +21,14 @@ pub fn naive_1(input: String) -> u32 {
             cat
         }
         ).sum();
-    dbg!(sum)
+    //dbg!(sum)
+    sum
 }
 
 pub fn run(input: &str) -> i32 {
-    dbg!(input.lines().map(|s| parser(s)).sum())
+    let res = input.lines().map(|s| parser(s)).sum();
+    //dbg!(res)
+    res
 }
 
 fn parse_str_num(i: &str) -> IResult<&str, &str> {
@@ -76,7 +79,7 @@ mod tests {
 
     #[test]
     fn solution_1_naive() {
-        let input = include_str!("../../input/parts/1.1").into();
+        let input = include_str!("../input/parts/1.1").into();
         dbg!(naive_1(input));
     }
 
@@ -104,13 +107,13 @@ mod tests {
 
     #[test]
     fn solution_1() {
-        let input = include_str!("../../input/parts/1.1").into();
+        let input = include_str!("../input/parts/1.1").into();
         dbg!(naive_1(input));
     }
 
     #[test]
     fn solution_2() {
-        let input = include_str!("../../input/parts/1.2").into();
+        let input = include_str!("../input/parts/1.2").into();
         dbg!(run(input));
     }
 }
