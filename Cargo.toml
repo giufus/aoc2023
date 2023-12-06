@@ -2,6 +2,7 @@
 [workspace]
 members = [
     "ex1",
+    "ex2",
 ]
 
 [profile.bench]

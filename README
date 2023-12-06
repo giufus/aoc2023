@@ -1,0 +1,5 @@
+Life is too short to write a README sometimes. Just code it.
+
+cargo install
+cargo test
+cargo bench -- "BENCH-ID"
