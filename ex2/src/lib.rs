@@ -2,6 +2,7 @@ use nom::bytes::complete::tag;
 use nom::character::complete::{alpha1, digit1, space0, space1};
 use nom::IResult;
 use nom::multi::separated_list1;
+use regex::Regex;
 
 #[derive(Debug, Default, PartialEq, Clone)]
 struct Game {
@@ -86,6 +87,69 @@ pub fn run(input: &str) -> u32 {
         .sum()
 }
 
+pub fn naive(input: &str) -> u32 {
+    let mut sum = 0;
+    for line in input.lines() {
+        let mut game = line.split(":");
+        let id = game.next().unwrap().split(" ").last().unwrap().parse::<u32>().unwrap();
+        let mut rounds = game.next().unwrap().split(";");
+        let mut valid = true;
+        for round in rounds {
+            let mut colors = round.split(",");
+            for color in colors {
+                let mut color = color.trim().split(" ");
+                let val = color.next().unwrap().parse::<u32>().unwrap();
+                let color = color.next().unwrap();
+                match color {
+                    "red" => if val > 12 { valid = false },
+                    "green" => if val > 13 { valid = false },
+                    "blue" => if val > 14 { valid = false },
+                    _ => panic!("unknown color")
+                }
+            }
+        }
+        if valid {
+            sum += id;
+        }
+    }
+    sum
+}
+
+pub fn regexp(input: &str) -> u32 {
+    let mut sum = 0;
+    let re = Regex::new("(?P<qty>[0-9]+) (?P<color>(red|blue|green))").unwrap();
+
+    for line in input.lines() {
+        let mut game = line.split(":");
+        let id = game.next().unwrap().split(" ").last().unwrap().parse::<u32>().unwrap();
+
+        let mut rounds = game.next().unwrap().split(";");
+        let mut valid = true;
+
+        for round in rounds {
+            let mut colors = round.split(",");
+            for color in colors {
+
+                let caps = re.captures(color.trim()).unwrap();
+
+                let val = &caps["qty"].parse::<u32>().unwrap();
+                let color = &caps["color"];
+                match color {
+                    "red" => if 12 < *val  { valid = false },
+                    "green" => if 13 < *val { valid = false },
+                    "blue" => if 14 < *val { valid = false },
+                    _ => panic!("unknown color")
+                }
+            }
+        }
+
+        if valid {
+            sum += id;
+        }
+    }
+    sum
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -129,5 +193,16 @@ mod tests {
     fn solution_1() {
         let input = include_str!("../input/parts/2.1").into();
         dbg!(run(input));
+    }
+
+    #[test]
+    fn solution_1_naive() {
+        let input = include_str!("../input/parts/2.1").into();
+        dbg!(naive(input));
+    }
+    #[test]
+    fn solution_1_regexp() {
+        let input = include_str!("../input/parts/2.1").into();
+        dbg!(regexp(input));
     }
 }
