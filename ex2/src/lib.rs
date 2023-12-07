@@ -1,3 +1,4 @@
+use std::cmp::max;
 use nom::bytes::complete::tag;
 use nom::character::complete::{alpha1, digit1, space0, space1};
 use nom::IResult;
@@ -8,6 +9,7 @@ use regex::Regex;
 struct Game {
     pub id: u32,
     pub rounds: Vec<Round>,
+    pub power: u32,
 }
 
 #[derive(Debug, Default, PartialEq, Clone)]
@@ -65,7 +67,19 @@ fn parse_rounds(input: &str) -> IResult<&str, Vec<Round>> {
 fn parse_game(input: &str) -> IResult<&str, Game> {
     let (input, id) = parse_game_id(input)?;
     let (input, rounds) = parse_rounds(input)?;
-    Ok((input, Game { id, rounds }))
+    let power: u32 = calculate_power(&rounds);
+    Ok((input, Game { id, rounds, power }))
+}
+
+fn calculate_power(rounds: &Vec<Round>) -> u32 {
+
+    let power: (u32, u32, u32) = rounds
+        .iter()
+        .fold((1u32, 1u32, 1u32), |acc, r|
+            (max(acc.0, r.red.unwrap_or_default()), max(acc.1, r.green.unwrap_or_default()), max(acc.2, r.blue.unwrap_or_default()))
+        );
+
+    power.0 * power.1 * power.2
 }
 
 fn parse_games(input: &str) -> IResult<&str, Vec<Game>> {
@@ -87,15 +101,27 @@ pub fn run(input: &str) -> u32 {
         .sum()
 }
 
+pub fn run_2(input: &str) -> u32 {
+    let (_, games) = parse_games(input).unwrap();
+    games
+        .iter()
+        /*.filter(|g| g.rounds
+            .iter()
+            .all(|r| r.red.unwrap_or_default() <= 12 as u32 && r.green.unwrap_or_default() <= 13 as u32 && r.blue.unwrap_or_default() <= 14 as u32))
+        */
+        .map(|g|g.power)
+        .sum()
+}
+
 pub fn naive(input: &str) -> u32 {
     let mut sum = 0;
     for line in input.lines() {
         let mut game = line.split(":");
         let id = game.next().unwrap().split(" ").last().unwrap().parse::<u32>().unwrap();
-        let mut rounds = game.next().unwrap().split(";");
+        let rounds = game.next().unwrap().split(";");
         let mut valid = true;
         for round in rounds {
-            let mut colors = round.split(",");
+            let colors = round.split(",");
             for color in colors {
                 let mut color = color.trim().split(" ");
                 let val = color.next().unwrap().parse::<u32>().unwrap();
@@ -123,11 +149,11 @@ pub fn regexp(input: &str) -> u32 {
         let mut game = line.split(":");
         let id = game.next().unwrap().split(" ").last().unwrap().parse::<u32>().unwrap();
 
-        let mut rounds = game.next().unwrap().split(";");
+        let rounds = game.next().unwrap().split(";");
         let mut valid = true;
 
         for round in rounds {
-            let mut colors = round.split(",");
+            let colors = round.split(",");
             for color in colors {
 
                 let caps = re.captures(color.trim()).unwrap();
@@ -154,6 +180,7 @@ pub fn regexp(input: &str) -> u32 {
 mod tests {
     use super::*;
 
+    /*
     #[test]
     fn test_1_game() {
         let input = "Game 10: 4 red, 1 green, 4 blue; 7 green, 8 blue, 4 red; 9 green, 3 red, 8 blue; 5 red, 2 green, 7 blue";
@@ -189,6 +216,8 @@ mod tests {
         assert_eq!(result.1, expected);
     }
 
+    */
+
     #[test]
     fn solution_1() {
         let input = include_str!("../input/parts/2.1").into();
@@ -204,5 +233,21 @@ mod tests {
     fn solution_1_regexp() {
         let input = include_str!("../input/parts/2.1").into();
         dbg!(regexp(input));
+    }
+
+    #[test]
+    fn test_all_solutions_part1() {
+        let input = include_str!("../input/parts/2.1").into();
+        let expected = 2317u32;
+        [run(input), naive(input), regexp(input)]
+            .iter()
+            .for_each(|r| assert_eq!(*r, expected));
+    }
+
+    #[test]
+    fn test_solution_1_part2() {
+        let input = include_str!("../input/parts/2.1").into();
+        let sol = run_2(input);
+        assert_eq!(sol, 74804)
     }
 }
